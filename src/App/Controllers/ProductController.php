@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Models\Product;
+use Framework\Viewer;
 
 class ProductController
 {
@@ -12,13 +13,16 @@ class ProductController
         $model = new Product();
         $products = $model->getData();
 
-        require_once __DIR__ . '/../../../views/products_index.php';
+        $viewer = new Viewer();
+        echo $viewer->render('shared/header.php', ['title' => 'Product']);
+        echo $viewer->render('Products/index.php', ['products' => $products]);
     }
 
     public function show(string $id)
     {
-        var_dump($id);
-        require_once __DIR__ . '/../../../views/products_show.php';
+        $viewer = new Viewer();
+        echo $viewer->render('shared/header.php', ['title' => 'Product']);
+        echo $viewer->render('Products/show.php', ['id' => $id]);
     }
 
     public function showPage(string $title, string $id, string $page)

@@ -2,10 +2,15 @@
 
 namespace App\Controllers;
 
+use Framework\Viewer;
+
 class HomeController
 {
     public function index()
     {
-        require_once __DIR__ . '/../../../views/home_index.php';
+        $viewer = new Viewer();
+
+        echo $viewer->render('shared/header.php', ['title' => 'Home']);
+        echo $viewer->render('Home/index.php');
     }
 }
