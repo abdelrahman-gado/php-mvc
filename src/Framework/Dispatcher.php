@@ -2,6 +2,7 @@
 
 namespace Framework;
 
+use ReflectionClass;
 use ReflectionMethod;
 
 class Dispatcher
@@ -22,10 +23,28 @@ class Dispatcher
         if (array_key_exists('namespace', $params)) {
             $namespace .= '\\' . $params['namespace'];
         }
-        $controller = $namespace . '\\' . $params['controller'];
 
-        $controller_object = new $controller;
+        $controller = $namespace . '\\' . $params['controller'];
+        // Auto Wiring Idea
+        $controller_object = $this->getObject($controller);
         $controller_object->$action(...$this->getActionArguments($controller, $action, $params));
+    }
+
+    private function getObject(string $className): object
+    {
+        $dependencies = [];
+        $reflector = new ReflectionClass($className);
+        $constructor = $reflector->getConstructor();
+        if (!$constructor) {
+            return new $className;
+        }
+
+        foreach ($constructor->getParameters() as $parameter) {
+            $type = (string) $parameter->getType();
+            $dependencies[] = $this->getObject($type);
+        }
+
+        return new $className(...$dependencies);
     }
 
     private function getActionArguments(string $controller, string $action, array $params): array
