@@ -1,21 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Framework;
 
-use ReflectionClass;
+use Framework\Exceptions\PageNotFoundException;
 use ReflectionMethod;
 
 class Dispatcher
 {
-    public function __construct(private Router $router)
-    {
+    public function __construct(
+        private Router $router,
+        private Container $container,
+    ) {
     }
 
     public function handle(string $path): void
     {
         $params = $this->router->match($path);
         if ($params === false) {
-            exit('No route matched');
+            throw new PageNotFoundException("No route matched for '$path'");
         }
 
         $action = $params['action'];
@@ -26,25 +30,8 @@ class Dispatcher
 
         $controller = $namespace . '\\' . $params['controller'];
         // Auto Wiring Idea
-        $controller_object = $this->getObject($controller);
+        $controller_object = $this->container->get($controller);
         $controller_object->$action(...$this->getActionArguments($controller, $action, $params));
-    }
-
-    private function getObject(string $className): object
-    {
-        $dependencies = [];
-        $reflector = new ReflectionClass($className);
-        $constructor = $reflector->getConstructor();
-        if (!$constructor) {
-            return new $className;
-        }
-
-        foreach ($constructor->getParameters() as $parameter) {
-            $type = (string) $parameter->getType();
-            $dependencies[] = $this->getObject($type);
-        }
-
-        return new $className(...$dependencies);
     }
 
     private function getActionArguments(string $controller, string $action, array $params): array
