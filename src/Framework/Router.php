@@ -17,7 +17,7 @@ class Router
         ];
     }
 
-    public function match(string $path): array|bool
+    public function match(string $path, string $method): array|bool
     {
         $path = trim($path, '/');
         foreach ($this->routes as $route) {
@@ -25,6 +25,11 @@ class Router
             if (preg_match($pattern, $path, $matches)) {
                 $matches = array_filter($matches, 'is_string', ARRAY_FILTER_USE_KEY);
                 $params = array_merge($matches, $route['params']);
+                if (array_key_exists('method', $params)) {
+                    if (strtolower($method) !== strtolower($params['method'])) {
+                        continue;
+                    }
+                }
 
                 $params['controller'] = $this->mapParamToController($params['controller']);
                 return $params;

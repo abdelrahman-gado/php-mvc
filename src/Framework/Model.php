@@ -11,7 +11,7 @@ abstract class Model
     protected ?string $table;
     protected array $errors = [];
 
-    public function __construct(private Database $database)
+    public function __construct(protected Database $database)
     {
     }
 
@@ -93,6 +93,49 @@ abstract class Model
             $stmt->bindValue($i++, $value, $type);
         }
 
+        return $stmt->execute();
+    }
+
+    public function update(string $id, array $data): bool
+    {
+        $this->validate($data);
+        if (!empty($this->errors)) {
+            return false;
+        }
+
+        $sql = "UPDATE {$this->getTable()} ";
+        unset($data['id']);
+        $assignments = array_keys($data);
+        array_walk($assignments, function (&$value) {
+            $value = "$value = ?";
+        });
+        $sql .= "SET " . implode(', ', $assignments);
+        $sql .= " WHERE id = ?";
+
+        $conn = $this->database->getConnection();
+        $stmt = $conn->prepare($sql);
+        $i = 1;
+        foreach (array_values($data) as $value) {
+            $type = match(gettype($value)) {
+                'integer' => PDO::PARAM_INT,
+                'boolean' => PDO::PARAM_BOOL,
+                'NULL' => PDO::PARAM_NULL,
+                default => PDO::PARAM_STR,
+            };
+
+            $stmt->bindValue($i++, $value, $type);
+        }
+
+        $stmt->bindValue($i++, $id, PDO::PARAM_INT);
+        return $stmt->execute();
+    }
+
+    public function delete(string $id)
+    {
+        $sql = "DELETE FROM {$this->getTable()} WHERE id = :id";
+        $conn = $this->database->getConnection();
+        $stmt = $conn->prepare($sql);
+        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
         return $stmt->execute();
     }
 }
