@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Controllers\Admin;
 
-class UserController
+use Framework\Controller;
+
+class UserController extends Controller
 {
     public function index()
     {
