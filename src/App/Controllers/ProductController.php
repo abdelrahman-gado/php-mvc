@@ -7,6 +7,7 @@ namespace App\Controllers;
 use App\Models\Product;
 use Framework\Controller;
 use Framework\Exceptions\PageNotFoundException;
+use Framework\Response;
 
 class ProductController extends Controller
 {
@@ -15,22 +16,22 @@ class ProductController extends Controller
     ) {
     }
 
-    public function index(): void
+    public function index(): Response
     {
         require_once __DIR__ . '/../Models/Product.php';
         $products = $this->model->findAll();
 
-        echo $this->viewer->render('Products/index.mvc.php', [
-            'products' => $products,
-            'total' => $this->model->getTotal(),
-        ]);
+       return $this->view('Products/index.mvc.php', [
+        'products' => $products,
+        'total' => $this->model->getTotal(),
+       ]); 
     }
 
-    public function show(string $id)
+    public function show(string $id): Response
     {
         $product = $this->getProduct($id);
 
-        echo $this->viewer->render('Products/show.mvc.php', ['product' => $product]);
+        return $this->view('Products/show.mvc.php', ['product' => $product]);
     }
 
     public function showPage(string $title, string $id, string $page)
@@ -38,12 +39,12 @@ class ProductController extends Controller
         echo $title, ' ', $id, ' ', $page;
     }
 
-    public function new(): void
+    public function new(): Response
     {
-        echo $this->viewer->render('Products/new.mvc.php');
+        return $this->view('Products/new.mvc.php');
     }
 
-    public function create()
+    public function create(): Response 
     {
         $data = [
             'name' => $this->request->post['name'],
@@ -53,10 +54,9 @@ class ProductController extends Controller
 
         if ($this->model->insert($data)) {
             $id = $this->model->getInsertedID();
-            header("Location: /products/{$id}/show");
-            exit();
+            return $this->redirect("/products/{$id}/show");
         } else {
-            echo $this->viewer->render('Products/new.mvc.php', [
+            return $this->view('Products/new.mvc.php', [
                 'errors' => $this->model->getErrors(),
                 'product' => $data,
             ]);
@@ -77,8 +77,7 @@ class ProductController extends Controller
         $product['description'] = empty($this->request->post['description']) ? null : $this->request->post['description'];
 
         if ($this->model->update($id, $product)) {
-            header("Location: /products/{$id}/show");
-            exit();
+            return $this->redirect("/products/{$id}/show");
         } else {
             echo $this->viewer->render('Products/edit.mvc.php', [
                 'errors' => $this->model->getErrors(),
@@ -97,17 +96,23 @@ class ProductController extends Controller
         return $product;
     }
 
-    public function delete(string $id)
+    public function delete(string $id): Response 
     {
         $product = $this->getProduct($id);
-        echo $this->viewer->render('Products/delete.mvc.php', ['product' => $product]);
+        return $this->view('Products/delete.mvc.php', ['product' => $product]);
     }
 
-    public function destroy(string $id)
+    public function destroy(string $id): Response
     {
         $product = $this->getProduct($id);
         $this->model->delete($id);
-        header("Location: /products");
-        exit();
+        return $this->redirect("Location: /products");
+    }
+
+    public function responseCodeExample(): Response
+    {
+        $this->response->setStatusCode(451);
+        $this->response->setBody('Unavailable for legal reasons');
+        return $this->response;
     }
 }

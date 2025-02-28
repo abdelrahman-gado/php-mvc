@@ -16,7 +16,7 @@ class Dispatcher
     ) {
     }
 
-    public function handle(Request $request): void
+    public function handle(Request $request): Response
     {
         $path = $this->getPath($request->uri);
         $params = $this->router->match($path, $request->method);
@@ -34,8 +34,9 @@ class Dispatcher
         // Auto Wiring Idea
         $controller_object = $this->container->get($controller);
         $controller_object->setRequest($request);
+        $controller_object->setResponse($this->container->get(Response::class));
         $controller_object->setViewer($this->container->get(TemplateViewerInterface::class));
-        $controller_object->$action(...$this->getActionArguments($controller, $action, $params));
+        return $controller_object->$action(...$this->getActionArguments($controller, $action, $params));
     }
 
     private function getActionArguments(string $controller, string $action, array $params): array

@@ -24,4 +24,5 @@ $container = require_once __DIR__ . '/../config/services.php';
 $dispatcher = new Dispatcher($router, $container);
 
 $request = Request::createFromGlobals();
-$dispatcher->handle($request);
+$response = $dispatcher->handle($request);
+$response->send();
