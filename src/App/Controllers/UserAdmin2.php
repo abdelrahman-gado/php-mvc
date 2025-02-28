@@ -6,7 +6,7 @@ namespace App\Controllers;
 
 use Framework\Controller;
 
-class UserAdmin2 extends Contrgdoller
+class UserAdmin2 extends Controller
 {
     public function showList()
     {
