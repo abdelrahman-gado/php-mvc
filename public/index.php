@@ -21,7 +21,8 @@ $router = require_once __DIR__ . '/../config/route.php';
 $container = require_once __DIR__ . '/../config/services.php';
 
 // Dispatching
-$dispatcher = new Dispatcher($router, $container);
+$middlewares = require_once __DIR__ . '/../config/middlewares.php';
+$dispatcher = new Dispatcher($router, $container, $middlewares);
 
 $request = Request::createFromGlobals();
 $response = $dispatcher->handle($request);

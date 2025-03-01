@@ -13,6 +13,7 @@ class Dispatcher
     public function __construct(
         private Router $router,
         private Container $container,
+        private array $middlewareClasses
     ) {
     }
 
@@ -33,10 +34,12 @@ class Dispatcher
         $controller = $namespace . '\\' . $params['controller'];
         // Auto Wiring Idea
         $controller_object = $this->container->get($controller);
-        $controller_object->setRequest($request);
         $controller_object->setResponse($this->container->get(Response::class));
         $controller_object->setViewer($this->container->get(TemplateViewerInterface::class));
-        return $controller_object->$action(...$this->getActionArguments($controller, $action, $params));
+        $controllerHandler = new ControllerRequestHandler($controller_object, $action, $this->getActionArguments($controller, $action, $params));
+        $middleware = $this->getMiddleware($params);
+        $middlewareHandler = new MiddlewareRequestHandler($middleware, $controllerHandler);
+        return $middlewareHandler->handle($request);
     }
 
     private function getActionArguments(string $controller, string $action, array $params): array
@@ -72,5 +75,21 @@ class Dispatcher
         }
 
         return $path;
+    }
+
+    private function getMiddleware(array $params): array
+    {
+        if (!array_key_exists('middleware', $params)) {
+            return [];
+        }
+
+        $middleware = explode("|", $params['middleware']);
+        array_walk($middleware, function (&$value) {
+            if (!array_key_exists($value, $this->middlewareClasses)) {
+                throw new UnexpectedValueException("Middleware '{$value}' not found", 500);
+            }
+            $value = $this->container->get($this->middlewareClasses[$value]);
+        });
+        return $middleware;
     }
 }

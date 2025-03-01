@@ -10,7 +10,7 @@ $router->add('/admin/users/index', [
     'action' => 'index'
 ]);
 
-$router->add('/{controller}/{id:\d+}/show', ['action' => 'show']);
+$router->add('/{controller}/{id:\d+}/show', ['action' => 'show', 'middleware' => 'deny|message|message']);
 $router->add('/{controller}/{id:\d+}/edit', ['action' => 'edit']);
 $router->add('/{controller}/{id:\d+}/update', ['action' => 'update']);
 $router->add('/{controller}/{id:\d+}/delete', ['action' => 'delete']);
